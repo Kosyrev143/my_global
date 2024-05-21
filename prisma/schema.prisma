@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String            @id @default(uuid())
+  name               String
+  surname            String
+  email              String            @unique
+  password           String
+  role               Role[]
+  position           String
+  phone              String
+  // многие к одному
+  company            Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId          String
+  client_type        String
+  // один ко многим
+  User_activity      User_activity[]
+  notification_sms   Boolean
+  notification_email Boolean
+  industries         String[]
+  // один ко многим
+  Support_message    Support_message[]
+  // один ко многим
+  Support_topic      Support_topic[]
+  // один ко многим
+  Token              Token[]
+
+  @@map("users")
+}
+
+model Token {
+  token     String   @unique
+  exp       DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  userAgent String   @map("user_agent")
+
+  @@map("tokens")
+}
+
+model Company {
+  id               String   @id @default(uuid())
+  name             String
+  email            String   @unique
+  phone            String
+  inn              String
+  federal_district String
+  contract_number  String
+  legal_address    String
+  // один ко многим
+  User             User[]
+  industries       String[]
+  mail_address     String
+  test_period      String
+  contract_start   String
+  contract_end     String
+  connect_start    String
+  connect_end      String
+}
+
+model User_activity {
+  id     String   @id @default(uuid())
+  events String[]
+  ip     String
+  // многие к одному
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+}
+
+enum Role {
+  ADMINISTRATOR
+  CLIENT
+  DEPARTMENT_HEAD
+  HR
+  MANAGER
+  MARKETER
+  SALES_ASSISTANT
+}
+
+model Support_message {
+  id              String        @id @default(uuid())
+  message         String
+  note            String
+  // многие к одному
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  // многие к одному
+  support_topic   Support_topic @relation(fields: [support_topicId], references: [id], onDelete: Cascade)
+  support_topicId String
+}
+
+model Support_topic {
+  id              String            @id @default(uuid())
+  title           String
+  status          String
+  user            User              @relation(fields: [author], references: [id], onDelete: Cascade)
+  author          String
+  // один ко многим
+  Support_message Support_message[]
+}
